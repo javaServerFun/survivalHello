@@ -1,5 +1,6 @@
 package pl.javasurvival.helloServer;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import io.vavr.collection.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
@@ -12,9 +13,8 @@ import reactor.ipc.netty.http.server.HttpServer;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -24,34 +24,25 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class HelloServerApplication {
 
     private List<String> guests = List.empty();
-    private static final Pattern pattern = Pattern.compile("name=(.*)");
+
 
     public static void main(String[] args) {
         HelloServerApplication application = new HelloServerApplication();
         application.serve();
     }
 
-    private void serve () {
+    private void serve() {
         RouterFunction route = route(GET("/"),
                 request -> {
-                    System.out.println("LEGET");
                     String html = renderPage(Optional.empty());
                     return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
                 }).andRoute(POST("/"),
                 request -> {
-                    System.out.println("POST:");
-
-                    return request.bodyToMono(String.class).flatMap( body -> {
-
-                        System.out.println(body);
-                        final Matcher matcher = pattern.matcher(body);
-                        if ( matcher.find()) {
-                            final String html = renderPage(Optional.of(matcher.group(1)));
-                            return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
-                        } else {
-                            return ServerResponse.badRequest().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject("cos nie tak"));
-                        }
-
+                    return request.bodyToMono(String.class).flatMap(body -> {
+                        QueryStringDecoder decoder = new QueryStringDecoder("?" + body);
+                        final String name = decoder.parameters().get("name").get(0);
+                        final String html = renderPage(Optional.of(name));
+                        return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
 
                     });
                 });
@@ -78,8 +69,9 @@ public class HelloServerApplication {
 
         String htmlTemplate = "<body>" +
                 "<h1>%s</h1>" +
-                "<pattern>%s</pattern>"+
+                "<pattern>%s</pattern>" +
                 "<form action='?' method='POST'>" +
+                userHtml +
                 userHtml +
                 "<pattern>Goście</pattern>" +
                 renderGuests() +
@@ -91,9 +83,9 @@ public class HelloServerApplication {
     }
 
     private String renderGuests() {
-        return "<ul>"+
-                guests.map(guest -> String.format("<li>%s</li>", guest) ).mkString()
-                +"</ul>";
+        return "<ul>" +
+                guests.map(guest -> String.format("<li>%s</li>", guest)).mkString()
+                + "</ul>";
 
 
     }
