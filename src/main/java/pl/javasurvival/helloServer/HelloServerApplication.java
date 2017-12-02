@@ -1,5 +1,6 @@
 package pl.javasurvival.helloServer;
 
+import io.vavr.collection.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
@@ -18,6 +19,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 public class HelloServerApplication {
 
+    private List<String> guests = List.empty();
+
     public static void main(String[] args) {
         HelloServerApplication application = new HelloServerApplication();
         application.serve();
@@ -26,7 +29,7 @@ public class HelloServerApplication {
     private void serve () {
         RouterFunction route = route(GET("/"),
                 request -> {
-                    String html = renderWelcome(request.queryParam("imie"));
+                    String html = renderPage(request.queryParam("imie"));
                     return ServerResponse.ok().contentType(MediaType.TEXT_HTML).body(fromObject(html));
                 });
 
@@ -36,7 +39,7 @@ public class HelloServerApplication {
         server.startAndAwait(myReactorHandler);
     }
 
-    private String renderWelcome(Optional<String> nameInput) {
+    private String renderPage(Optional<String> nameInput) {
         String welcome = "Witaj na stronie obozu przetrwania";
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -44,7 +47,10 @@ public class HelloServerApplication {
 
         String inputHtml = "<input type='text' name='imie'><input type='submit' value='wyślij'>";
         String userHtml = nameInput
-                .map(name -> String.format("<p>%s</p>", name))
+                .map(name -> {
+                    guests = guests.append(name);
+                    return String.format("<p>%s</p>", name);
+                })
                 .orElse(inputHtml);
 
         String htmlTemplate = "<body>" +
@@ -52,11 +58,20 @@ public class HelloServerApplication {
                 "<p>%s</p>"+
                 "<form action='?'>" +
                 userHtml +
+                "<p>Goście</p>" +
+                renderGuests() +
                 "</form>" +
                 "</body>";
 
         String html = String.format(htmlTemplate, welcome, time);
         return html;
+    }
+
+    private String renderGuests() {
+        return "<ul>"+
+                guests.map(guest -> String.format("<li>%s</li>", guest) ).mkString()
+                +"</ul>";
+
 
     }
 
