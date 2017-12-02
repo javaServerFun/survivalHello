@@ -23,7 +23,11 @@ public class HelloServerApplication {
 				LocalDateTime now = LocalDateTime.now();
 				DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 				String time = "\nCzas to:"+ now.format(myFormatter);
-				return ServerResponse.ok().body(fromObject(welcome + time));
+
+				String name = request.queryParam("imie").orElse(" nic ");
+
+
+				return ServerResponse.ok().body(fromObject(welcome + time + "\n"+ name));
 			});
 
 		HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
