@@ -13,6 +13,8 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -22,6 +24,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class HelloServerApplication {
 
     private List<String> guests = List.empty();
+    private static final Pattern pattern = Pattern.compile("name=(.*)");
 
     public static void main(String[] args) {
         HelloServerApplication application = new HelloServerApplication();
@@ -37,9 +40,20 @@ public class HelloServerApplication {
                 }).andRoute(POST("/"),
                 request -> {
                     System.out.println("POST:");
-                    request.bodyToFlux(String.class).subscribe( x ->  System.out.println("a:"+x));
-                    String html = renderPage(request.queryParam("imie"));
-                    return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
+
+                    return request.bodyToMono(String.class).flatMap( body -> {
+
+                        System.out.println(body);
+                        final Matcher matcher = pattern.matcher(body);
+                        if ( matcher.find()) {
+                            final String html = renderPage(Optional.of(matcher.group(1)));
+                            return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
+                        } else {
+                            return ServerResponse.badRequest().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject("cos nie tak"));
+                        }
+
+
+                    });
                 });
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
@@ -54,20 +68,20 @@ public class HelloServerApplication {
         DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         String time = "\nCzas to:" + now.format(myFormatter);
 
-        String inputHtml = "<input type='text' name='imie' ><input type='submit' value='wyślij'>";
+        String inputHtml = "<input type='text' name='name' ><input type='submit' value='wyślij'>";
         String userHtml = nameInput
                 .map(name -> {
                     guests = guests.append(name);
-                    return String.format("<p>%s</p>", name);
+                    return String.format("<pattern>%s</pattern>", name);
                 })
                 .orElse(inputHtml);
 
         String htmlTemplate = "<body>" +
                 "<h1>%s</h1>" +
-                "<p>%s</p>"+
+                "<pattern>%s</pattern>"+
                 "<form action='?' method='POST'>" +
                 userHtml +
-                "<p>Goście</p>" +
+                "<pattern>Goście</pattern>" +
                 renderGuests() +
                 "</form>" +
                 "</body>";
