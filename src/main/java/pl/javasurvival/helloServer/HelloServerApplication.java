@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 public class HelloServerApplication {
@@ -30,6 +31,13 @@ public class HelloServerApplication {
     private void serve () {
         RouterFunction route = route(GET("/"),
                 request -> {
+                    System.out.println("LEGET");
+                    String html = renderPage(Optional.empty());
+                    return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
+                }).andRoute(POST("/"),
+                request -> {
+                    System.out.println("POST:");
+                    request.bodyToFlux(String.class).subscribe( x ->  System.out.println("a:"+x));
                     String html = renderPage(request.queryParam("imie"));
                     return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
                 });
@@ -46,7 +54,7 @@ public class HelloServerApplication {
         DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         String time = "\nCzas to:" + now.format(myFormatter);
 
-        String inputHtml = "<input type='text' name='imie'><input type='submit' value='wyślij'>";
+        String inputHtml = "<input type='text' name='imie' ><input type='submit' value='wyślij'>";
         String userHtml = nameInput
                 .map(name -> {
                     guests = guests.append(name);
@@ -57,7 +65,7 @@ public class HelloServerApplication {
         String htmlTemplate = "<body>" +
                 "<h1>%s</h1>" +
                 "<p>%s</p>"+
-                "<form action='?'>" +
+                "<form action='?' method='POST'>" +
                 userHtml +
                 "<p>Goście</p>" +
                 renderGuests() +
