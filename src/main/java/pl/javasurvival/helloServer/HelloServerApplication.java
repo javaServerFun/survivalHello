@@ -19,11 +19,13 @@ import java.util.Optional;
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 public class HelloServerApplication {
 
     private List<String> guests = List.empty();
+    private List<String> messages = List.empty();
 
 
     public static void main(String[] args) {
@@ -32,7 +34,9 @@ public class HelloServerApplication {
     }
 
     private void serve() {
-        RouterFunction route = route(GET("/"),
+        RouterFunction route = route(GET("/api/time"), request -> ServerResponse.ok().body(fromObject(LocalDateTime.now())));
+
+                /*androute(GET("/"),
                 request -> {
                     String html = renderPage(Optional.empty());
                     return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
@@ -45,7 +49,7 @@ public class HelloServerApplication {
                         return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
 
                     });
-                });
+                });*/
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
         HttpServer server = HttpServer.create("localhost", 8080);
@@ -72,10 +76,10 @@ public class HelloServerApplication {
                 "<pattern>%s</pattern>" +
                 "<form action='?' method='POST'>" +
                 userHtml +
-                userHtml +
                 "<pattern>Goście</pattern>" +
                 renderGuests() +
                 "</form>" +
+
                 "</body>";
 
         String html = String.format(htmlTemplate, welcome, time);
