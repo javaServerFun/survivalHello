@@ -9,6 +9,7 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.ipc.netty.http.server.HttpServer;
 
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class HelloServerApplication {
         RouterFunction route = route(GET("/"),
                 request -> {
                     String html = renderPage(request.queryParam("imie"));
-                    return ServerResponse.ok().contentType(MediaType.TEXT_HTML).body(fromObject(html));
+                    return ServerResponse.ok().contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8"))).body(fromObject(html));
                 });
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
