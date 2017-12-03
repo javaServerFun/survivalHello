@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.ipc.netty.http.server.HttpServer;
 
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,9 +30,13 @@ public class HelloServerApplication {
 				String time = "<p>Czas to:"+ now.format(myFormatter)+"</p>";
 				String visits = "<p>To są "+ counter.incrementAndGet() + " odwiedziny</p>";
 				String inputHtml = "<input type='text' name='userName'>";
+				String submitHtml = "<input type='submit' value='wyślij'>";
+				String formHtml = String.format("<form>%s %s</form>", inputHtml, submitHtml);
 
-				return ServerResponse.ok().contentType(MediaType.TEXT_HTML).body(fromObject("<body>"
-                        + welcomeHtml + time + visits + inputHtml
+				return ServerResponse.ok()
+                        .contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8")))
+                        .body(fromObject("<body>"
+                        + welcomeHtml + time + visits + formHtml
                         + "</body>"
                 ));
 			});
