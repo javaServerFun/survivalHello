@@ -1,5 +1,6 @@
 package pl.javasurvival.helloServer;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -22,13 +23,17 @@ public class HelloServerApplication {
 
 		RouterFunction route = route( GET("/"),
 				request -> {
-		        String welcome = "Witaj na stronie obozu przetrwania";
+		        String welcomeHtml = "<h1>Witaj na stronie obozu przetrwania</h1>";
 				LocalDateTime now = LocalDateTime.now();
 				DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-				String time = "\nCzas to:"+ now.format(myFormatter);
-				String visits = "\nTo są "+ counter.incrementAndGet() + " odwiedziny";
+				String time = "<p>Czas to:"+ now.format(myFormatter)+"</p>";
+				String visits = "<p>To są "+ counter.incrementAndGet() + " odwiedziny</p>";
+				String inputHtml = "<input type='text' name='userName'>";
 
-				return ServerResponse.ok().body(fromObject(welcome + time + visits));
+				return ServerResponse.ok().contentType(MediaType.TEXT_HTML).body(fromObject("<body>"
+                        + welcomeHtml + time + visits + inputHtml
+                        + "</body>"
+                ));
 			});
 
 		HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
