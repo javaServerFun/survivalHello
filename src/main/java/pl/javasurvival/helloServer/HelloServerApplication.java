@@ -20,15 +20,13 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 public class HelloServerApplication {
-    private AtomicInteger counter = new AtomicInteger(0);
-
     public static void main(String[] args) {
         new HelloServerApplication().serve();
 
     }
 
     private void serve() {
-        RouterFunction route = route(GET("/"),
+        RouterFunction route = route(GET("/api/time"),
                 renderWelcome());
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
@@ -39,23 +37,12 @@ public class HelloServerApplication {
 
     private HandlerFunction<ServerResponse> renderWelcome() {
         return request -> {
-            Optional<String> userName = request.queryParam("userName");
-            String welcomeHtml = String.format("<h1>Witaj %s na stronie obozu przetrwania</h1>",
-                    userName.orElse("nieznany"));
             LocalDateTime now = LocalDateTime.now();
             DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            String time = "<p>Czas to:" + now.format(myFormatter) + "</p>";
-            String visits = "<p>To są " + counter.incrementAndGet() + " odwiedziny</p>";
-            String inputHtml = "<input type='text' name='userName'>";
-            String submitHtml = "<input type='submit' value='wyślij'>";
-            String formHtml = String.format("<form>%s %s</form>", inputHtml, submitHtml);
 
             return ServerResponse.ok()
-                    .contentType(new MediaType(MediaType.TEXT_HTML, Charset.forName("utf-8")))
-                    .body(fromObject("<body>"
-                            + welcomeHtml + time + visits + formHtml
-                            + "</body>"
-                    ));
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(fromObject(myFormatter.format(now)));
         };
     }
 }
