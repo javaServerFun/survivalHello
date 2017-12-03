@@ -11,6 +11,7 @@ import reactor.ipc.netty.http.server.HttpServer;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
@@ -24,7 +25,9 @@ public class HelloServerApplication {
 
 		RouterFunction route = route( GET("/"),
 				request -> {
-		        String welcomeHtml = "<h1>Witaj na stronie obozu przetrwania</h1>";
+		        Optional<String> userName = request.queryParam("userName");
+		        String welcomeHtml = String.format("<h1>Witaj %s na stronie obozu przetrwania</h1>",
+                            userName.orElse("nieznany"));
 				LocalDateTime now = LocalDateTime.now();
 				DateTimeFormatter myFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 				String time = "<p>Czas to:"+ now.format(myFormatter)+"</p>";
