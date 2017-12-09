@@ -13,6 +13,7 @@ import reactor.ipc.netty.http.server.HttpServer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromObject;
@@ -23,7 +24,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.n
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 public class HelloServerApplication {
-    private final List<Message> messages = new ArrayList<>();
+    private final List<Message> messages = Collections.synchronizedList(new ArrayList<>());
 
 
     private HelloServerApplication() {
