@@ -53,7 +53,7 @@ public class HelloServerApplication {
                 addMessage(message);
                 return ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
-                        .body(fromObject(messages.toJavaList()));
+                        .body(fromObject(getMessages().toJavaList()));
             });
 
         };
@@ -63,7 +63,7 @@ public class HelloServerApplication {
         return request -> {
             return ServerResponse.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(fromObject(messages.toJavaList()));
+                    .body(fromObject(getMessages().toJavaList()));
         };
     }
 
@@ -81,5 +81,9 @@ public class HelloServerApplication {
 
     private synchronized void addMessage( Message newMessage) {
         messages = messages.append(newMessage);
+    }
+
+    private synchronized List<Message> getMessages() {
+        return this.messages;
     }
 }
