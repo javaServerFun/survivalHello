@@ -19,9 +19,14 @@ public class ForumService {
     private final MongoIO mongo;
 
     ForumService() {
-        topics = new AtomicReference<>(HashMap.of( "java", Topic.create("java")));
+        //topics = new AtomicReference<>(HashMap.of( "java", Topic.create("java")));
         ApplicationContext context = new AnnotationConfigApplicationContext(SpringContextApp.class);
         mongo = context.getBean(MongoIO.class);
+        topics = new AtomicReference<>(List.ofAll(mongo.findAll()).foldLeft(HashMap.<String, Topic>empty(), (map, msg) ->
+                map.put( msg.topic,
+                        map.get(msg.topic)
+                                .getOrElse(Topic.create(msg.topic))
+                                .addMessage(msg.message))));
 
     }
 
