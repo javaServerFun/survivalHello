@@ -21,16 +21,16 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
-public class HelloServerApplication {
+public class MessageBoardApplication {
     private List<Message> messages = List.empty();
 
-    private HelloServerApplication() {
+    private MessageBoardApplication() {
         messages = messages.append( new Message("test content", "Zenek Testowy"));
         messages = messages.append( new Message("bla bla", "Sebastian Tester"));
     }
 
     public static void main(String[] args) {
-        new HelloServerApplication().serve();
+        new MessageBoardApplication().serve();
 
     }
 
