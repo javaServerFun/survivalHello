@@ -10,16 +10,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ForumService {
 
-    private AtomicReference<Map<String, Topic>> topics;
+    private final AtomicReference<Map<String, Topic>> topics;
 
+    private final MessageBoardWriter writer;
 
     ForumService() {
-        this.topics = new AtomicReference<>(List.of(
-                Topic.create("ogólne"),
-                Topic.create("strona"),
-                Topic.create("java")
-        ).toMap( (element) -> element.name, element -> element));
-
+        this.topics = new AtomicReference<>(new MessageBoardReader().readAllTopics("messages.jsons"));
+        this.writer =  new MessageBoardWriter("messages.jsons");
     }
 
     public Option<Topic> getTopicByName(String topicName) {
@@ -27,10 +24,13 @@ public class ForumService {
     }
 
     public Option<Topic> addMessageToTopic(String topicName, Message message) {
-        return topics.updateAndGet( topicsMap ->
-           topicsMap.get(topicName)
-                   .map( topic -> topicsMap.put(topicName, topic.addMessage(message)))
-                   .getOrElse(topicsMap)
+        return topics.updateAndGet(topicsMap ->
+                topicsMap.get(topicName)
+                        .map(topic -> {
+                            writer.write(topicName, message);
+                            return topicsMap.put(topicName, topic.addMessage(message));
+                        })
+                        .getOrElse(topicsMap)
         ).get(topicName);
     }
 

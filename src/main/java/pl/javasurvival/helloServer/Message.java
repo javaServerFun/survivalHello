@@ -13,4 +13,12 @@ public class Message {
         this.content = content;
         this.author = author;
     }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "content='" + content + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }
