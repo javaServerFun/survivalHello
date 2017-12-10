@@ -15,4 +15,8 @@ public class Topic {
     static Topic create(String topicName) {
         return new Topic(topicName, List.empty());
     }
+
+    public Topic addMessage(Message message) {
+        return new Topic(this.name, this.messages.append(message));
+    }
 }
