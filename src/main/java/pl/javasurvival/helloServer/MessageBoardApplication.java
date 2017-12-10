@@ -1,6 +1,7 @@
 package pl.javasurvival.helloServer;
 
 import io.vavr.collection.List;
+import io.vavr.control.Option;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
@@ -21,24 +22,23 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
-public class HelloServerApplication {
-    private List<Message> messages = List.empty();
+public class MessageBoardApplication {
+    private final ForumService forumService = new ForumService();
 
-    private HelloServerApplication() {
-        messages = messages.append( new Message("test content", "Zenek Testowy"));
-        messages = messages.append( new Message("bla bla", "Sebastian Tester"));
+    private MessageBoardApplication() {
+
     }
 
     public static void main(String[] args) {
-        new HelloServerApplication().serve();
+        new MessageBoardApplication().serve();
 
     }
 
     private void serve() {
         RouterFunction route = nest( path("/api"),
                 route(GET("/time"), renderTime())
-                .andRoute(GET("/messages"), renderMessages())
-                .andRoute(POST("/messages"), postMessage()));
+                .andRoute(GET("/messages/{topic}"), renderMessages())
+                .andRoute(POST("/messages/{topic}"), postMessage()));
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
         HttpServer server = HttpServer.create("localhost", 8080);
@@ -48,22 +48,32 @@ public class HelloServerApplication {
 
     private HandlerFunction<ServerResponse> postMessage() {
         return request -> {
+            final String topic =request.pathVariable("topic");
             Mono<Message> postedMessage = request.bodyToMono(Message.class);
             return postedMessage.flatMap( message -> {
-                addMessage(message);
-                return ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(fromObject(messages.toJavaList()));
+                final Option<Topic> updatedTopic = forumService.addMessageToTopic(topic, message);
+                return messagesOrErrror(updatedTopic);
+
             });
 
         };
     }
 
+    private Mono<ServerResponse> messagesOrErrror(Option<Topic> topic) {
+        return topic.map ( t ->
+            ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(fromObject(t.messages.toJavaList()))
+        ).getOrElse( () ->
+                ServerResponse.notFound().build()
+
+        );
+    }
+
     private HandlerFunction<ServerResponse> renderMessages() {
         return request -> {
-            return ServerResponse.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(fromObject(messages.toJavaList()));
+            final String topic =request.pathVariable("topic");
+            return messagesOrErrror( this.forumService.getTopicByName(topic));
         };
     }
 
@@ -79,7 +89,4 @@ public class HelloServerApplication {
     }
 
 
-    private synchronized void addMessage( Message newMessage) {
-        messages = messages.append(newMessage);
-    }
 }
