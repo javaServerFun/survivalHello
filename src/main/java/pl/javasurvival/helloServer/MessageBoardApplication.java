@@ -25,7 +25,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class MessageBoardApplication {
     private final MessageBoardService service = new MessageBoardService();
 
-    private MessageBoardApplication() {
+    MessageBoardApplication() {
 
     }
 
@@ -34,15 +34,19 @@ public class MessageBoardApplication {
     }
 
     private void serve() {
-        RouterFunction route = nest( path("/api"),
-                route(GET("/time"), renderTime())
-                .andRoute(GET("/messages/{topic}"), renderMessages())
-                .andRoute(POST("/messages/{topic}"), postMessage()));
+        RouterFunction route = prepareRouterFunction();
 
         HttpHandler httpHandler = RouterFunctions.toHttpHandler(route);
         HttpServer server = HttpServer.create("localhost", 8080);
         ReactorHttpHandlerAdapter myReactorHandler = new ReactorHttpHandlerAdapter(httpHandler);
         server.startAndAwait(myReactorHandler);
+    }
+
+    RouterFunction prepareRouterFunction() {
+        return nest( path("/api"),
+                    route(GET("/time"), renderTime())
+                    .andRoute(GET("/messages/{topic}"), renderMessages())
+                    .andRoute(POST("/messages/{topic}"), postMessage()));
     }
 
     private HandlerFunction<ServerResponse> postMessage() {
